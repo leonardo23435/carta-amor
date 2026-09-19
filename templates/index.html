@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Para ti ❤️</title>
+  <style>
+    :root {
+      --envelope-color: {{ color_sobre }};
+      --paper-bg: #fffdf7;
+      --ink: #2c1810;
+      --accent: #ff6b6b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(160deg, #1a0a12 0%, #2a0a1f 50%, #1a0a2a 100%);
+      min-height: 100dvh;
+      color: #fff;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      position: relative;
+    }
+
+    .heart-bg {
+      position: fixed;
+      font-size: 14px;
+      opacity: 0.1;
+      animation: float-bg 16s linear infinite;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    @keyframes float-bg {
+      0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      15%  { opacity: 0.12; }
+      85%  { opacity: 0.08; }
+      100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+    }
+
+    .main-wrapper {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      max-width: 920px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .slideshow-section {
+      width: 100%;
+      max-width: 380px;
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+      transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .slideshow-section.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .slideshow-frame {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      background: #12080f;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.4s ease-in-out;
+    }
+
+    .slide.active {
+      opacity: 1;
+    }
+
+    .slideshow-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      transition: all 0.35s ease;
+    }
+
+    .dot.active {
+      background: #ff6b6b;
+      transform: scale(1.35);
+      box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+    }
+
+    .envelope-section {
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .scene {
+      width: 100%;
+      padding-top: 0;
+      transition: padding-top 1s cubic-bezier(0.22, 1, 0.36, 1); /* reserva espacio cuando la carta crece */
+    }
+
+    .envelope-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1.45 / 1;
+      cursor: pointer;
+      transition: transform 0.25s ease;
+    }
+
+    .envelope-wrapper:active {
+      transform: scale(0.98);
+    }
+
+    .envelope {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      perspective: 1000px; /* la perspectiva debe estar en el padre directo de la solapa */
+    }
+
+    .envelope-body {
+      position: absolute;
+      inset: 0;
+      background: var(--envelope-color);
+      border-radius: 12px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45), inset 0 -12px 28px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 54%;
+      background: #c0392b;
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      transform-origin: top center;
+      transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1), z-index 0s 0.45s;
+      z-index: 3;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    .envelope.open .flap {
+      transform: rotateX(180deg);
+      z-index: 1; /* ya abierta, la solapa queda DETRÁS de la carta y no tapa el texto */
+    }
+
+    .seal {
+      position: absolute;
+      top: 37%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 54px;
+      height: 54px;
+      background: radial-gradient(circle at 30% 30%, #ff8a8a, #c0392b);
+      border-radius: 50%;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+      transition: all 0.45s ease;
+    }
+
+    .envelope.open .seal {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.3);
+    }
+
+    .letter {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      bottom: 7%;
+      height: 78%;
+      background: var(--paper-bg);
+      border-radius: 6px;
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.3);
+      transition: height 1s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 2;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .envelope.open .letter {
+      height: var(--letter-h, 78%); /* la carta crece hacia arriba; --letter-h lo calcula el JS */
+    }
+
+    .letter-header {
+      flex-shrink: 0;
+      padding: 14px 16px 8px;
+      text-align: center;
+      border-bottom: 1px dashed #e8d9c8;
+    }
+
+    .letter-header .heart-icon {
+      font-size: 26px;
+    }
+
+    .letter-body {
+      flex: 1;
+      min-height: 0;
+      padding: 14px 18px 18px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: var(--ink);
+      font-size: 0.95rem;
+      line-height: 1.65;
+      white-space: normal;          /* antes pre-wrap: convertía los saltos/espacios del HTML en texto visible */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      overflow-x: hidden;
+      scrollbar-gutter: stable both-edges; /* la barra de scroll no descentra el texto */
+      text-align: center;
+    }
+
+    #typed-text {
+      white-space: pre-wrap; /* aquí sí: respeta los saltos de línea de la carta */
+    }
+
+    .letter-body::-webkit-scrollbar {
+      width: 5px;
+    }
+    .letter-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .letter-body::-webkit-scrollbar-thumb {
+      background: #d4c4b0;
+      border-radius: 10px;
+    }
+
+    .cursor {
+      display: none;
+      width: 2px;
+      height: 1.1em;
+      background: var(--accent);
+      margin-left: 1px;
+      vertical-align: text-bottom;
+      animation: blink 0.8s step-end infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .hint {
+      text-align: center;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 12px;
+    }
+
+    .love-btn-container {
+      width: 100%;
+      max-width: 340px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease;
+      pointer-events: none;
+      margin-top: 10px;
+    }
+
+    .love-btn-container.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .btn-love {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(255, 65, 108, 0.45);
+      animation: pulse 2.3s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .floating-heart {
+      position: fixed;
+      font-size: 22px;
+      pointer-events: none;
+      z-index: 100;
+      animation: rise 3s ease-out forwards;
+    }
+
+    @keyframes rise {
+      0%   { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(-110vh) scale(1.6) rotate(50deg); }
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    .music-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    .music-toggle.playing {
+      background: rgba(255, 107, 107, 0.35);
+    }
+
+    @media (min-width: 780px) {
+      .main-wrapper {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 50px;
+        max-width: 900px;
+      }
+      .slideshow-section { max-width: 340px; order: 1; }
+      .envelope-section { max-width: 340px; order: 2; }
+    }
+
+    @media (max-width: 400px) {
+      .slideshow-section, .envelope-section { max-width: 300px; }
+      .letter-body { font-size: 0.9rem; padding: 12px 14px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="main-wrapper">
+    {% if fotos %}
+    <div class="slideshow-section" id="slideshow-section">
+      <div class="slideshow-frame">
+        {% for foto in fotos %}
+        <div class="slide {% if loop.first %}active{% endif %}"
+             style="background-image: url('/fotos/{{ foto | urlencode }}')"></div>
+        {% endfor %}
+      </div>
+      <div class="slideshow-dots">
+        {% for foto in fotos %}
+        <div class="dot {% if loop.first %}active{% endif %}"></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="envelope-section">
+      <div class="scene">
+        <div class="envelope-wrapper" id="envelope-wrapper">
+          <div class="envelope" id="envelope">
+            <div class="envelope-body"></div>
+            <div class="flap"></div>
+            <div class="seal">❤️</div>
+            <div class="letter">
+              <div class="letter-header">
+                <div class="heart-icon">💕</div>
+              </div>
+              <div class="letter-body" id="letter-body"><span id="typed-text"></span><span class="cursor" id="cursor"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="hint" id="hint">Toca el sobre para abrirlo 💌</p>
+    </div>
+  </div>
+
+  <div class="love-btn-container" id="love-btn-container">
+    <button class="btn-love" id="love-btn">❤️ Te amo</button>
+  </div>
+
+  {% if musica %}
+  <div class="music-toggle" id="music-toggle">🎵</div>
+  <audio id="bg-music" loop preload="auto">
+    <source src="/musica/{{ musica | urlencode }}" type="audio/mpeg">
+  </audio>
+  {% endif %}
+
+  <script>
+    const TEXTO = {{ texto | tojson }};
+    const TOTAL_FOTOS = {{ fotos|length if fotos else 0 }};
+
+    let isOpen = false;
+    let isTyping = false;
+    let currentSlide = 0;
+
+    const envelope = document.getElementById('envelope');
+    const envelopeWrapper = document.getElementById('envelope-wrapper');
+    const scene = document.querySelector('.scene');
+    const letterBody = document.getElementById('letter-body');
+    const typedTextEl = document.getElementById('typed-text');
+    const cursorEl = document.getElementById('cursor');
+    const loveBtnContainer = document.getElementById('love-btn-container');
+    const loveBtn = document.getElementById('love-btn');
+    const hint = document.getElementById('hint');
+    const slideshowSection = document.getElementById('slideshow-section');
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const ctx = confettiCanvas.getContext('2d');
+
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', () => { resizeCanvas(); ajustarCarta(); });
+    resizeCanvas();
+
+    // Calcula la altura de la carta abierta y reserva ese espacio para que nada se solape
+    function ajustarCarta() {
+      if (!isOpen) return;
+      const H = envelopeWrapper.offsetHeight;                              // alto del sobre
+      const alto = Math.max(H * 0.9, Math.min(window.innerHeight * 0.6, 460));
+      envelope.style.setProperty('--letter-h', alto + 'px');
+      scene.style.paddingTop = Math.max(0, alto - H * 0.93) + 'px';        // 0.93 = (100% - bottom 7%)
+    }
+
+    envelopeWrapper.addEventListener('click', () => {
+      if (isOpen || isTyping) return;
+      isOpen = true;
+      envelope.classList.add('open');
+      hint.textContent = 'Leyendo tu carta...';
+      typedTextEl.textContent = '';
+      cursorEl.style.display = 'inline-block';
+      ajustarCarta();
+      iniciarMusica();   // el clic del usuario permite que el navegador reproduzca audio
+      setTimeout(() => scene.scrollIntoView({ behavior: 'smooth', block: 'center' }), 1100);
+
+      if (slideshowSection) {
+        setTimeout(() => {
+          slideshowSection.classList.add('visible');
+          startSlideshow();
+        }, 500);
+      }
+      setTimeout(() => startTyping(TEXTO), 750);
+    });
+
+    function startSlideshow() {
+      if (TOTAL_FOTOS <= 1) return;
+      setInterval(() => {
+        slides[currentSlide].classList.remove('active');
+        if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
+        currentSlide = (currentSlide + 1) % TOTAL_FOTOS;
+        slides[currentSlide].classList.add('active');
+        if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+      }, 3800);
+    }
+
+    function startTyping(text) {
+      isTyping = true;
+      let i = 0;
+      const speed = 45; // más lento = más natural
+
+      function type() {
+        if (i < text.length) {
+          typedTextEl.textContent += text.charAt(i);
+          i++;
+          letterBody.scrollTop = letterBody.scrollHeight;
+          setTimeout(type, speed);
+        } else {
+          isTyping = false;
+          cursorEl.style.display = 'none';
+          setTimeout(() => {
+            loveBtnContainer.classList.add('visible');
+            hint.textContent = '❤️';
+          }, 400);
+        }
+      }
+      type();
+    }
+
+    loveBtn.addEventListener('click', () => {
+      for (let i = 0; i < 35; i++) setTimeout(createFloatingHeart, i * 45);
+      launchConfetti();
+    });
+
+    function createFloatingHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      heart.textContent = ['❤️','💕','💖','💗','💓','💞','💘'][Math.floor(Math.random()*7)];
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.bottom = '5px';
+      heart.style.fontSize = (18 + Math.random() * 22) + 'px';
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 3000);
+    }
+
+    const confettiPieces = [];
+    let animating = false;
+
+    function launchConfetti() {
+      const colors = ['#ff6b6b','#ff8e8e','#ffb6c1','#ff69b4','#ff1493','#ffd700','#fff'];
+      for (let i = 0; i < 130; i++) {
+        confettiPieces.push({
+          x: Math.random() * confettiCanvas.width, y: -30,
+          size: 5 + Math.random() * 8,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speedY: 2.2 + Math.random() * 4, speedX: -2.5 + Math.random() * 5,
+          rotation: Math.random() * 360, rotSpeed: -6 + Math.random() * 12
+        });
+      }
+      if (!animating) animateConfetti();
+    }
+
+    function animateConfetti() {
+      animating = true;
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      for (let i = confettiPieces.length - 1; i >= 0; i--) {
+        const p = confettiPieces[i];
+        p.y += p.speedY; p.x += p.speedX; p.rotation += p.rotSpeed;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+        ctx.restore();
+        if (p.y > confettiCanvas.height + 30) confettiPieces.splice(i, 1);
+      }
+      if (confettiPieces.length > 0) requestAnimationFrame(animateConfetti);
+      else animating = false;
+    }
+
+    const musicToggle = document.getElementById('music-toggle');
+    const bgMusic = document.getElementById('bg-music');
+
+    function actualizarIconoMusica() {
+      if (!musicToggle || !bgMusic) return;
+      const sonando = !bgMusic.paused;                 // el estado real lo da el <audio>, no una variable aparte
+      musicToggle.textContent = sonando ? '🔊' : '🎵';
+      musicToggle.classList.toggle('playing', sonando);
+    }
+
+    function iniciarMusica() {
+      if (!bgMusic || !bgMusic.paused) return;
+      bgMusic.volume = 0.7;
+      bgMusic.play().catch(err => console.warn('No se pudo reproducir la música:', err));
+    }
+
+    if (musicToggle && bgMusic) {
+      bgMusic.addEventListener('play', actualizarIconoMusica);
+      bgMusic.addEventListener('pause', actualizarIconoMusica);
+      bgMusic.addEventListener('error', () => console.error('Error cargando la música. Revisa static/musica/'));
+      musicToggle.addEventListener('click', () => {
+        if (bgMusic.paused) iniciarMusica(); else bgMusic.pause();
+      });
+    }
+
+    for (let i = 0; i < 14; i++) {
+      const h = document.createElement('div');
+      h.className = 'heart-bg';
+      h.textContent = '❤️';
+      h.style.left = Math.random() * 100 + 'vw';
+      h.style.animationDelay = (Math.random() * 16) + 's';
+      h.style.fontSize = (11 + Math.random() * 13) + 'px';
+      document.body.appendChild(h);
+    }
+  </script>
+</body>
+</html>
