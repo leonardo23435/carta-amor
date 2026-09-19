@@ -123,7 +123,8 @@ def servir_musica(filename):
 if __name__ == "__main__":
     print("\n" + "=" * 55)
     print("  Carta de Amor lista!")
-    print("  Abre en tu navegador: http://127.0.0.1:5000")
     print("  Musica encontrada: " + str(encontrar_musica()))
     print("=" * 55 + "\n")
-    app.run(debug=True, port=5000)
+
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
